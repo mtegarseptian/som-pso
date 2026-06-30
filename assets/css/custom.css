@@ -1,108 +1,239 @@
+/* =========================================
+   UI MODERNIZATION & ANIMATIONS
+   ========================================= */
+
 body {
-  background-color: #f0f2f5;
-  font-family: "Segoe UI", sans-serif;
+  background-color: #f8fafc; /* Warna abu-abu kebiruan sangat lembut */
+  font-family: "Plus Jakarta Sans", sans-serif;
+  color: #334155;
+  overflow-x: hidden;
 }
 
-#sidebar-wrapper {
+/* Base Layout */
+#wrapper {
+  display: flex;
+  width: 100%;
+  align-items: stretch;
+}
+.bg-light-modern {
+  background-color: #f8fafc;
+}
+
+/* Sidebar Modern (Midnight Blue) */
+/* Sidebar Modern (Clean White Theme) */
+.modern-sidebar {
   min-height: 100vh;
-  width: 260px;
-  min-width: 260px;
-  transition: all 0.3s;
+  width: 280px;
+  min-width: 280px;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  flex-shrink: 0;
+  background: #ffffff !important; /* Diubah menjadi putih murni */
+  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.04);
+  z-index: 10;
+}
+#wrapper.toggled .modern-sidebar {
+  margin-left: -280px;
 }
 
-#wrapper.toggled #sidebar-wrapper {
-  margin-left: -260px;
-}
-
-.sidebar-heading {
-  font-size: 1.1rem;
+.icon-brand {
+  background: #f1f5f9; /* Abu-abu sangat muda untuk latar icon */
+  border-radius: 12px;
+  padding: 10px;
 }
 
 .list-group-item {
-  border-radius: 0 !important;
-  border-left: 3px solid transparent;
-  padding: 10px 20px;
-  font-size: 0.9rem;
-  transition: all 0.2s;
+  background-color: transparent !important;
+  border: none;
+  border-radius: 10px !important;
+  color: #475569 !important; /* Warna teks abu-abu gelap */
+  padding: 12px 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+  transition: all 0.3s ease;
 }
-
 .list-group-item:hover {
-  border-left-color: #198754;
-  background-color: #1a2332 !important;
+  background-color: #f8fafc !important; /* Efek hover abu-abu terang */
+  color: #10b981 !important; /* Teks menjadi hijau saat dihover */
+  transform: translateX(5px);
 }
 .list-group-item.active {
-  border-left-color: #198754;
-  background-color: #198754 !important;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  color: #ffffff !important; /* Teks tetap putih untuk menu aktif */
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
 }
 
 .sidebar-divider {
   font-size: 0.7rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #6c757d !important;
-  padding-top: 12px;
+  letter-spacing: 1.5px;
+  color: #94a3b8 !important;
+  padding: 20px 20px 10px 20px;
 }
 
+/* Navbar Modern */
+.modern-navbar {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+/* =========================================
+   ANIMASI FADE-IN (Entry Animation)
+   ========================================= */
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Terapkan animasi secara bertahap pada card */
+.container-animate > .row > div,
+.container-animate > .card {
+  animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+.container-animate > .row:nth-child(1) > div {
+  animation-delay: 0.1s;
+}
+.container-animate > .row:nth-child(2) > div {
+  animation-delay: 0.2s;
+}
+.container-animate > .row:nth-child(3) > div {
+  animation-delay: 0.3s;
+}
+.container-animate > .card {
+  animation-delay: 0.2s;
+}
+
+/* =========================================
+   CARD & COMPONENT STYLING
+   ========================================= */
 .card {
-  border: none;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+  transition: all 0.3s ease;
+  background: #ffffff;
+}
+.card:hover {
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  transform: translateY(-2px);
 }
 .card-header {
-  border-radius: 12px 12px 0 0 !important;
-  font-weight: 600;
+  border-radius: 16px 16px 0 0 !important;
+  font-weight: 700;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+  padding: 1.25rem 1.5rem;
+  letter-spacing: 0.3px;
 }
 
+/* Pastikan canvas memiliki tinggi yang cukup untuk menampung batang */
+#cropChart {
+  width: 100% !important;
+  height: 450px !important; /* Ditingkatkan agar grafik tidak gepeng */
+  min-height: 400px;
+}
+
+/* Modifikasi Stat Cards (Dashboard) */
 .stat-card {
-  border-radius: 12px;
+  border-radius: 16px;
   color: white;
-  padding: 20px;
-  transition: transform 0.2s;
-}
-.stat-card:hover {
-  transform: translateY(-3px);
-}
-
-.badge-rendah {
-  background-color: #dc3545;
-}
-.badge-sedang {
-  background-color: #fd7e14;
-}
-.badge-tinggi {
-  background-color: #198754;
-}
-
-.progress-bar-custom {
-  height: 8px;
-  border-radius: 4px;
-}
-
-.table thead th {
-  background-color: #198754;
-  color: white;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
   border: none;
 }
+.stat-card::after {
+  content: "";
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  top: -30px;
+  right: -30px;
+  transition: all 0.5s ease;
+}
+.stat-card:hover::after {
+  transform: scale(1.5);
+}
 
-.metric-card {
-  border-left: 4px solid #198754;
+/* Modifikasi Tombol */
+.btn {
+  border-radius: 8px;
+  font-weight: 600;
+  padding: 0.6rem 1.2rem;
+  transition: all 0.25s ease;
 }
-.metric-card.warning {
-  border-left-color: #fd7e14;
-}
-.metric-card.danger {
-  border-left-color: #dc3545;
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
+/* Tabel */
+.table {
+  color: #334155;
+}
+.table thead th {
+  background-color: #f8fafc;
+  color: #475569;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+  border-bottom: 2px solid #e2e8f0;
+}
+.table-hover tbody tr {
+  transition: all 0.2s;
+}
+.table-hover tbody tr:hover {
+  background-color: #f1f5f9;
+  transform: scale(1.005);
+}
+
+/* Info Steps & Badges */
 .algorithm-step {
-  background: white;
-  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
   padding: 15px;
-  margin-bottom: 10px;
-  border-left: 4px solid #198754;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  margin-bottom: 12px;
+  border-left: 5px solid #10b981;
+  transition: all 0.3s;
+}
+.algorithm-step:hover {
+  margin-left: 5px; /* Efek maju saat di-hover */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-canvas {
-  max-width: 100%;
+.badge {
+  padding: 0.4em 0.8em;
+  border-radius: 6px;
+  font-weight: 600;
+}
+.badge-rendah {
+  background-color: #ef4444;
+  color: white;
+}
+.badge-sedang {
+  background-color: #f59e0b;
+  color: white;
+}
+.badge-tinggi {
+  background-color: #10b981;
+  color: white;
+}
+
+/* Pastikan kontainer chart punya tinggi */
+#convergenceChart {
+  width: 100% !important;
+  height: 300px !important;
+  min-height: 300px;
 }

@@ -1,4 +1,7 @@
 <?php
+// ============================================
+// clustering_som.php
+// ============================================
 require_once '../includes/header.php';
 require_once '../config/database.php';
 require_once '../core/SOM.php';
@@ -170,7 +173,7 @@ $conn->close();
                 $cfg = $clusterConfig[$prod];
             ?>
             <div class="col-md-4">
-                <div class="card text-center border-<?= $cfg['color'] ?> border-2">
+                <div class="card text-center border-<?= $cfg['color'] ?> border-2 h-100">
                     <div class="card-body">
                         <i class="bi bi-<?= $cfg['icon'] ?> text-<?= $cfg['color'] ?> fs-2 mb-2"></i>
                         <div class="fs-2 fw-bold text-<?= $cfg['color'] ?>"><?= number_format($count) ?></div>
@@ -191,9 +194,11 @@ $conn->close();
                 <i class="bi bi-pie-chart me-2"></i>Distribusi Cluster Produktivitas
             </div>
             <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <canvas id="somPieChart" height="250"></canvas>
+                <div class="row align-items-stretch">
+                    <div class="col-md-6 d-flex align-items-center justify-content-center">
+                        <div style="height:280px; width:100%; position:relative;">
+                            <canvas id="somPieChart"></canvas>
+                        </div>
                     </div>
                     <div class="col-md-6 d-flex flex-column justify-content-center">
                         <h6 class="fw-bold mb-3">Interpretasi Cluster SOM Standar</h6>
@@ -211,25 +216,6 @@ $conn->close();
             </div>
         </div>
 
-        <script>
-        new Chart(document.getElementById('somPieChart'), {
-            type: 'doughnut',
-            data: {
-                labels: ['Rendah', 'Sedang', 'Tinggi'],
-                datasets: [{
-                    data: [
-                        <?= $clusterCounts['rendah'] ?? 0 ?>,
-                        <?= $clusterCounts['sedang'] ?? 0 ?>,
-                        <?= $clusterCounts['tinggi'] ?? 0 ?>
-                    ],
-                    backgroundColor: ['#dc3545','#fd7e14','#198754'],
-                    borderWidth: 2
-                }]
-            },
-            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
-        });
-        </script>
-
         <?php else: ?>
         <div class="card">
             <div class="card-body text-center py-5">
@@ -240,5 +226,33 @@ $conn->close();
         <?php endif; ?>
     </div>
 </div>
+
+<script>
+function renderCharts() {
+    const somCtx = document.getElementById('somPieChart');
+    if (somCtx) {
+        new Chart(somCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Rendah', 'Sedang', 'Tinggi'],
+                datasets: [{
+                    data: [
+                        <?= $clusterCounts['rendah'] ?? 0 ?>,
+                        <?= $clusterCounts['sedang'] ?? 0 ?>,
+                        <?= $clusterCounts['tinggi'] ?? 0 ?>
+                    ],
+                    backgroundColor: ['#dc3545','#fd7e14','#198754'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+    }
+}
+</script>
 
 <?php require_once '../includes/footer.php'; ?>

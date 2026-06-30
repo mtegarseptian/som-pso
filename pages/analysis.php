@@ -9,22 +9,74 @@ $attrLabels = ['Nitrogen (N)','Phosphorus (P)','Potassium (K)','Temperature','Hu
 $productivity = ['rendah','sedang','tinggi'];
 
 $stats = [];
+
+// ===============================
+// Ambil statistik (mean & std) per atribut per cluster
+// ===============================
 foreach ($productivity as $prod) {
     foreach ($attrs as $attr) {
-        $r = $conn->query("SELECT AVG(cd.$attr) as avg, MIN(cd.$attr) as min, MAX(cd.$attr) as max, STDDEV(cd.$attr) as std
-            FROM hybrid_results hr JOIN crop_data cd ON cd.id = hr.data_id
-            WHERE hr.productivity_label = '$prod'")->fetch_assoc();
-        $stats[$prod][$attr] = $r;
+        $sql = "SELECT 
+                    AVG(cd.$attr) as avg_val, 
+                    STDDEV(cd.$attr) as std_val 
+                FROM hybrid_results hr 
+                JOIN crop_data cd ON cd.id = hr.data_id 
+                WHERE hr.productivity_label = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $prod);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $row = $res->fetch_assoc();
+        $stmt->close();
+
+        $stats[$prod][$attr] = [
+            'avg' => $row['avg_val'] ?? 0,
+            'std' => $row['std_val'] ?? 0,
+        ];
+    }
+}
+
+// ===============================
+// Normalisasi data untuk Radar Chart
+// ===============================
+$normalized = [];
+
+foreach ($attrs as $attr) {
+
+    $values = [];
+
+    foreach ($productivity as $prod) {
+        $values[] = floatval($stats[$prod][$attr]['avg']);
+    }
+
+    $min = min($values);
+    $max = max($values);
+
+    foreach ($productivity as $prod) {
+
+        $value = floatval($stats[$prod][$attr]['avg']);
+
+        if ($max == $min) {
+            $normalized[$prod][] = 0;
+        } else {
+            $normalized[$prod][] = round(
+                ($value - $min) / ($max - $min),
+                3
+            );
+        }
     }
 }
 
 // Distribusi crop per cluster
 $cropDist = [];
 foreach ($productivity as $prod) {
-    $r = $conn->query("SELECT cd.label, COUNT(*) as c FROM hybrid_results hr 
+    $stmt = $conn->prepare("SELECT cd.label, COUNT(*) as c FROM hybrid_results hr 
         JOIN crop_data cd ON cd.id = hr.data_id 
-        WHERE hr.productivity_label='$prod' GROUP BY cd.label ORDER BY c DESC LIMIT 5");
+        WHERE hr.productivity_label = ? GROUP BY cd.label ORDER BY c DESC LIMIT 5");
+    $stmt->bind_param("s", $prod);
+    $stmt->execute();
+    $r = $stmt->get_result();
     while ($row = $r->fetch_assoc()) $cropDist[$prod][] = $row;
+    $stmt->close();
 }
 $conn->close();
 ?>
@@ -39,8 +91,8 @@ $conn->close();
             <div class="card-header bg-success text-white">
                 <i class="bi bi-hexagon me-2"></i>Profil Rata-rata Atribut per Cluster (Normalisasi)
             </div>
-            <div class="card-body">
-                <canvas id="radarChart" height="280"></canvas>
+            <div style="height:320px; position:relative; overflow:hidden;">
+                <canvas id="radarChart"></canvas>
             </div>
         </div>
     </div>
@@ -49,12 +101,12 @@ $conn->close();
             <div class="card-header bg-primary text-white">
                 <i class="bi bi-bar-chart-steps me-2"></i>Rata-rata Nitrogen per Produktivitas
             </div>
-            <div class="card-body">
-                <canvas id="nitrogenChart" height="150"></canvas>
-                <div class="alert alert-info mt-3 py-2 small mb-0">
-                    <i class="bi bi-lightbulb me-1"></i>
-                    Cluster produktivitas <strong>sedang</strong> memiliki median Nitrogen tertinggi, menunjukkan bahwa produktivitas tidak hanya ditentukan oleh satu atribut.
-                </div>
+            <div style="height:320px; position:relative; overflow:hidden;">
+                <canvas id="nitrogenChart"></canvas>
+            </div>
+            <div class="alert alert-info mt-3 py-2 small mb-0">
+                <i class="bi bi-lightbulb me-1"></i>
+                Cluster produktivitas <strong>sedang</strong> memiliki median Nitrogen tertinggi, menunjukkan bahwa produktivitas tidak hanya ditentukan oleh satu atribut.
             </div>
         </div>
     </div>
@@ -133,85 +185,61 @@ $conn->close();
 </div>
 
 <script>
-// Radar chart
-const radarLabels = <?= json_encode($attrLabels) ?>;
-<?php
-// Normalisasi nilai untuk radar (min-max dari semua cluster)
-$radarData = [];
-foreach ($productivity as $prod) {
-    $vals = [];
-    foreach ($attrs as $attr) {
-        $vals[] = round($stats[$prod][$attr]['avg'] ?? 0, 2);
-    }
-    $radarData[$prod] = $vals;
-}
-// Normalize per attr untuk radar
-$normalized = [];
-foreach ($attrs as $i => $attr) {
-    $allVals = array_map(fn($p) => $radarData[$p][$i], $productivity);
-    $min = min($allVals); $max = max($allVals);
-    foreach ($productivity as $prod) {
-        $normalized[$prod][$i] = $max > $min ? round(($radarData[$prod][$i] - $min) / ($max - $min), 3) : 0.5;
-    }
-}
-?>
-new Chart(document.getElementById('radarChart'), {
-    type: 'radar',
-    data: {
-        labels: radarLabels,
-        datasets: [
-            {
-                label: 'Rendah',
-                data: <?= json_encode(array_values($normalized['rendah'])) ?>,
-                borderColor: '#dc3545',
-                backgroundColor: 'rgba(220,53,69,0.1)',
-                pointBackgroundColor: '#dc3545'
-            },
-            {
-                label: 'Sedang',
-                data: <?= json_encode(array_values($normalized['sedang'])) ?>,
-                borderColor: '#fd7e14',
-                backgroundColor: 'rgba(253,126,20,0.1)',
-                pointBackgroundColor: '#fd7e14'
-            },
-            {
-                label: 'Tinggi',
-                data: <?= json_encode(array_values($normalized['tinggi'])) ?>,
-                borderColor: '#198754',
-                backgroundColor: 'rgba(25,135,84,0.1)',
-                pointBackgroundColor: '#198754'
-            }
-        ]
-    },
-    options: {
-        responsive: true,
-        plugins: { legend: { position: 'top' } },
-        scales: { r: { min: 0, max: 1, ticks: { stepSize: 0.2 } } }
-    }
-});
+function initAnalysisCharts() {
+    console.log("Mencoba merender grafik...");
 
-// Nitrogen chart
-new Chart(document.getElementById('nitrogenChart'), {
-    type: 'bar',
-    data: {
-        labels: ['Rendah', 'Sedang', 'Tinggi'],
-        datasets: [{
-            label: 'Rata-rata Nitrogen (N)',
-            data: [
-                <?= round($stats['rendah']['N']['avg'] ?? 0, 2) ?>,
-                <?= round($stats['sedang']['N']['avg'] ?? 0, 2) ?>,
-                <?= round($stats['tinggi']['N']['avg'] ?? 0, 2) ?>
-            ],
-            backgroundColor: ['rgba(220,53,69,0.8)','rgba(253,126,20,0.8)','rgba(25,135,84,0.8)'],
-            borderRadius: 6
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true } }
-    }
-});
+    const statsData = {
+        rendah: <?= json_encode(array_values($normalized['rendah'] ?? [0,0,0,0,0,0,0])) ?>,
+        sedang: <?= json_encode(array_values($normalized['sedang'] ?? [0,0,0,0,0,0,0])) ?>,
+        tinggi: <?= json_encode(array_values($normalized['tinggi'] ?? [0,0,0,0,0,0,0])) ?>
+    };
+
+    const nitrogenData = [
+        <?= round($stats['rendah']['N']['avg'] ?? 0, 2) ?>,
+        <?= round($stats['sedang']['N']['avg'] ?? 0, 2) ?>,
+        <?= round($stats['tinggi']['N']['avg'] ?? 0, 2) ?>
+    ];
+
+    console.log("Data Nitrogen:", nitrogenData);
+
+    // 1. Radar
+    const radarCtx = document.getElementById('radarChart').getContext('2d');
+    new Chart(radarCtx, {
+        type: 'radar',
+        data: {
+            labels: <?= json_encode($attrLabels) ?>,
+            datasets: [
+                { label: 'Rendah', data: statsData.rendah, borderColor: '#dc3545', backgroundColor: 'rgba(220,53,69,0.1)' },
+                { label: 'Sedang', data: statsData.sedang, borderColor: '#fd7e14', backgroundColor: 'rgba(253,126,20,0.1)' },
+                { label: 'Tinggi', data: statsData.tinggi, borderColor: '#198754', backgroundColor: 'rgba(25,135,84,0.1)' }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+    // 2. Bar Nitrogen
+    const nitroCtx = document.getElementById('nitrogenChart').getContext('2d');
+    new Chart(nitroCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Rendah', 'Sedang', 'Tinggi'],
+            datasets: [{
+                label: 'Mean Nitrogen',
+                data: nitrogenData,
+                backgroundColor: ['#dc3545', '#fd7e14', '#198754']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
+
+document.addEventListener("DOMContentLoaded", initAnalysisCharts);
 </script>
 
 <?php require_once '../includes/footer.php'; ?>

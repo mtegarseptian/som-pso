@@ -1,4 +1,7 @@
-// Utility chart helpers (opsional, chart sudah inline di masing-masing halaman)
-Chart.defaults.font.family = "'Segoe UI', sans-serif";
+// Konfigurasi Global
+Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
 Chart.defaults.font.size = 13;
 Chart.defaults.color = '#495057';
+Chart.defaults.responsive = true;
+Chart.defaults.maintainAspectRatio = false; // Penting agar box tidak berantakan
+

@@ -8,14 +8,28 @@ $importMsg = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
     $file = $_FILES['csv_file']['tmp_name'];
     if ($file) {
+        // 1. Matikan proteksi foreign key sementara
+        $conn->query("SET FOREIGN_KEY_CHECKS = 0");
+        
+        // 2. Kosongkan semua tabel riwayat yang bergantung pada dataset lama
+        $conn->query("TRUNCATE TABLE crop_data_normalized");
+        $conn->query("TRUNCATE TABLE som_results");
+        $conn->query("TRUNCATE TABLE hybrid_results");
+        
+        // 3. Kosongkan tabel utama
         $conn->query("TRUNCATE TABLE crop_data");
+        
+        // 4. Nyalakan kembali proteksi foreign key
+        $conn->query("SET FOREIGN_KEY_CHECKS = 1");
+
+        // 5. Proses baca dan masukkan data CSV (BAGIAN INI JANGAN DIHAPUS)
         $f = fopen($file, 'r');
         fgetcsv($f); // skip header
         $count = 0;
         while (($row = fgetcsv($f)) !== false) {
             if (count($row) < 8) continue;
             $stmt = $conn->prepare("INSERT INTO crop_data (N,P,K,temperature,humidity,ph,rainfall,label) VALUES (?,?,?,?,?,?,?,?)");
-            $stmt->bind_param("dddddddds", $row[0],$row[1],$row[2],$row[3],$row[4],$row[5],$row[6],$row[7]);
+            $stmt->bind_param("ddddddds", $row[0],$row[1],$row[2],$row[3],$row[4],$row[5],$row[6],$row[7]);
             $stmt->execute();
             $count++;
         }
@@ -31,7 +45,6 @@ foreach (['N','P','K','temperature','humidity','ph','rainfall'] as $col) {
                        STDDEV($col) as std FROM crop_data")->fetch_assoc();
     $stats[$col] = $r;
 }
-
 $totalData = $conn->query("SELECT COUNT(*) as c FROM crop_data")->fetch_assoc()['c'] ?? 0;
 $totalLabel = $conn->query("SELECT COUNT(DISTINCT label) as c FROM crop_data")->fetch_assoc()['c'] ?? 0;
 

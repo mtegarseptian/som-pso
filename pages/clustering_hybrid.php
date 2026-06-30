@@ -1,4 +1,7 @@
 <?php
+// ============================================
+// clustering_hybrid.php
+// ============================================
 require_once '../includes/header.php';
 require_once '../config/database.php';
 require_once '../core/SOM.php';
@@ -148,7 +151,9 @@ $conn->close();
                 <i class="bi bi-graph-up me-2"></i>Kurva Konvergensi PSO
             </div>
             <div class="card-body">
-                <canvas id="convergenceChart" height="120"></canvas>
+                <div style="height:280px; position:relative;">
+                    <canvas id="convergenceChart"></canvas>
+                </div>
             </div>
         </div>
         <?php endif; ?>
@@ -168,7 +173,7 @@ $conn->close();
                 $cfg = $clusterConfig[$prod];
             ?>
             <div class="col-md-4">
-                <div class="card text-center border-<?= $cfg['color'] ?> border-2">
+                <div class="card text-center border-<?= $cfg['color'] ?> border-2 h-100">
                     <div class="card-body">
                         <i class="bi bi-<?= $cfg['icon'] ?> text-<?= $cfg['color'] ?> fs-2 mb-2"></i>
                         <div class="fs-2 fw-bold text-<?= $cfg['color'] ?>"><?= number_format($count) ?></div>
@@ -185,11 +190,13 @@ $conn->close();
                 <i class="bi bi-pie-chart me-2"></i>Distribusi Cluster Hybrid SOM-PSO
             </div>
             <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-md-5">
-                        <canvas id="hybridPieChart" height="230"></canvas>
+                <div class="row align-items-stretch">
+                    <div class="col-md-5 d-flex align-items-center justify-content-center">
+                        <div style="height:240px; width:100%; position:relative;">
+                            <canvas id="hybridPieChart"></canvas>
+                        </div>
                     </div>
-                    <div class="col-md-7">
+                    <div class="col-md-7 d-flex flex-column justify-content-center">
                         <?php if ($evalHybrid): ?>
                         <div class="row g-2 mb-3">
                             <div class="col-6">
@@ -206,7 +213,7 @@ $conn->close();
                             </div>
                         </div>
                         <?php endif; ?>
-                        <div class="alert alert-success py-2 small">
+                        <div class="alert alert-success py-2 small mb-0">
                             <i class="bi bi-check-circle-fill me-1"></i>
                             Optimasi PSO berhasil meningkatkan kualitas clustering SOM secara signifikan.
                         </div>
@@ -219,49 +226,57 @@ $conn->close();
 </div>
 
 <script>
-<?php if (count($psoHistory) > 0): ?>
-const iters    = <?= json_encode(array_column($psoHistory, 'iteration')) ?>;
-const fitnessH = <?= json_encode(array_column($psoHistory, 'best_fitness')) ?>;
-new Chart(document.getElementById('convergenceChart'), {
-    type: 'line',
-    data: {
-        labels: iters,
-        datasets: [{
-            label: 'Best Fitness (Silhouette)',
-            data: fitnessH,
-            borderColor: '#198754',
-            backgroundColor: 'rgba(25,135,84,0.1)',
-            fill: true,
-            tension: 0.3,
-            pointRadius: 3
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: { legend: { position: 'top' } },
-        scales: { y: { beginAtZero: false }, x: { title: { display: true, text: 'Iterasi' } } }
+// Fungsi ini akan dipanggil otomatis oleh footer.php saat halaman selesai dimuat
+function renderCharts() {
+    // 1. Kurva Konvergensi PSO
+    const convCtx = document.getElementById('convergenceChart');
+    if (convCtx) {
+        new Chart(convCtx, {
+            type: 'line',
+            data: {
+                labels: <?= json_encode(array_column($psoHistory, 'iteration')) ?>,
+                datasets: [{
+                    label: 'Best Fitness (Silhouette)',
+                    data: <?= json_encode(array_column($psoHistory, 'best_fitness')) ?>,
+                    borderColor: '#198754',
+                    backgroundColor: 'rgba(25,135,84,0.1)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: false } }
+            }
+        });
     }
-});
-<?php endif; ?>
 
-<?php if ($totalClustered > 0): ?>
-new Chart(document.getElementById('hybridPieChart'), {
-    type: 'doughnut',
-    data: {
-        labels: ['Rendah', 'Sedang', 'Tinggi'],
-        datasets: [{
-            data: [
-                <?= $clusterCounts['rendah'] ?? 0 ?>,
-                <?= $clusterCounts['sedang'] ?? 0 ?>,
-                <?= $clusterCounts['tinggi'] ?? 0 ?>
-            ],
-            backgroundColor: ['#dc3545','#fd7e14','#198754'],
-            borderWidth: 2
-        }]
-    },
-    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
-});
-<?php endif; ?>
+    // 2. Pie Chart Hybrid
+    const hybridCtx = document.getElementById('hybridPieChart');
+    if (hybridCtx) {
+        new Chart(hybridCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Rendah', 'Sedang', 'Tinggi'],
+                datasets: [{
+                    data: [
+                        <?= $clusterCounts['rendah'] ?? 0 ?>,
+                        <?= $clusterCounts['sedang'] ?? 0 ?>,
+                        <?= $clusterCounts['tinggi'] ?? 0 ?>
+                    ],
+                    backgroundColor: ['#dc3545', '#fd7e14', '#198754'],
+                    borderWidth: 2
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } } 
+            }
+        });
+    }
+}
 </script>
 
 <?php require_once '../includes/footer.php'; ?>

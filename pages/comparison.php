@@ -161,53 +161,63 @@ if ($evalSOM && $evalHybrid) {
 </div>
 
 <script>
-new Chart(document.getElementById('compChart'), {
-    type: 'bar',
-    data: {
-        labels: ['Silhouette Score ↑', 'Davies-Bouldin Index ↓'],
-        datasets: [
-            {
-                label: 'SOM Standar',
-                data: [<?= $evalSOM['silhouette_score'] ?? 0.151 ?>, <?= $evalSOM['dbi_score'] ?? 2.1715 ?>],
-                backgroundColor: 'rgba(108,117,125,0.8)',
-                borderRadius: 6
-            },
-            {
-                label: 'Hybrid SOM-PSO',
-                data: [<?= $evalHybrid['silhouette_score'] ?? 0.2623 ?>, <?= $evalHybrid['dbi_score'] ?? 1.3998 ?>],
-                backgroundColor: 'rgba(25,135,84,0.9)',
-                borderRadius: 6
-            }
-        ]
-    },
-    options: {
-        responsive: true,
-        plugins: { legend: { position: 'top' } },
-        scales: { y: { beginAtZero: true } }
-    }
-});
+function renderCharts() {
+    // Grafik Perbandingan Metrik (Silhouette & DBI)
+    new Chart(document.getElementById('compChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Silhouette Score ↑', 'Davies-Bouldin Index ↓'],
+            datasets: [
+                {
+                    label: 'SOM Standar',
+                    data: [<?= $evalSOM['silhouette_score'] ?? 0.151 ?>, <?= $evalSOM['dbi_score'] ?? 2.1715 ?>],
+                    backgroundColor: 'rgba(108,117,125,0.8)',
+                    borderRadius: 6
+                },
+                {
+                    label: 'Hybrid SOM-PSO',
+                    data: [<?= $evalHybrid['silhouette_score'] ?? 0.2623 ?>, <?= $evalHybrid['dbi_score'] ?? 1.3998 ?>],
+                    backgroundColor: 'rgba(25,135,84,0.9)',
+                    borderRadius: 6
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'top' } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
 
-new Chart(document.getElementById('hybridDistChart'), {
-    type: 'bar',
-    data: {
-        labels: ['Rendah', 'Sedang', 'Tinggi'],
-        datasets: [
-            {
-                label: 'SOM Standar',
-                data: [<?= $evalSOM['cluster_low'] ?? 720 ?>, <?= $evalSOM['cluster_medium'] ?? 800 ?>, <?= $evalSOM['cluster_high'] ?? 680 ?>],
-                backgroundColor: 'rgba(108,117,125,0.7)',
-                borderRadius: 4
-            },
-            {
-                label: 'Hybrid SOM-PSO',
-                data: [<?= $evalHybrid['cluster_low'] ?? 710 ?>, <?= $evalHybrid['cluster_medium'] ?? 820 ?>, <?= $evalHybrid['cluster_high'] ?? 670 ?>],
-                backgroundColor: ['rgba(220,53,69,0.8)','rgba(253,126,20,0.8)','rgba(25,135,84,0.8)'],
-                borderRadius: 4
-            }
-        ]
-    },
-    options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
-});
+    // Grafik Distribusi Cluster
+    new Chart(document.getElementById('hybridDistChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Rendah', 'Sedang', 'Tinggi'],
+            datasets: [
+                {
+                    label: 'SOM Standar',
+                    data: [<?= $evalSOM['cluster_low'] ?? 720 ?>, <?= $evalSOM['cluster_medium'] ?? 800 ?>, <?= $evalSOM['cluster_high'] ?? 680 ?>],
+                    backgroundColor: 'rgba(108,117,125,0.7)',
+                    borderRadius: 4
+                },
+                {
+                    label: 'Hybrid SOM-PSO',
+                    data: [<?= $evalHybrid['cluster_low'] ?? 710 ?>, <?= $evalHybrid['cluster_medium'] ?? 820 ?>, <?= $evalHybrid['cluster_high'] ?? 670 ?>],
+                    backgroundColor: ['rgba(220,53,69,0.8)','rgba(253,126,20,0.8)','rgba(25,135,84,0.8)'],
+                    borderRadius: 4
+                }
+            ]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { legend: { position: 'top' } }, 
+            scales: { y: { beginAtZero: true } } 
+        }
+    });
+}
 </script>
 
 <?php require_once '../includes/footer.php'; ?>

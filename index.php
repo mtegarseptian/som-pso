@@ -124,11 +124,11 @@ $conn->close();
 <div class="row g-3">
     <!-- Distribusi Tanaman -->
     <div class="col-lg-8">
-        <div class="card">
+        <div class="card h-100">
             <div class="card-header bg-dark text-white">
                 <i class="bi bi-flower2 me-2"></i>Distribusi Jenis Tanaman dalam Dataset
             </div>
-            <div class="card-body">
+            <div class="card-body h-100">
                 <canvas id="cropChart" height="120"></canvas>
             </div>
         </div>
@@ -167,39 +167,40 @@ $conn->close();
 </div>
 
 <script>
-const labelNames = <?= json_encode(array_column($labelData, 'label')) ?>;
-const labelCounts = <?= json_encode(array_column($labelData, 'jumlah')) ?>;
+function renderCharts() {
+    const labelNames = <?= json_encode(array_column($labelData, 'label')) ?>;
+    const labelCounts = <?= json_encode(array_column($labelData, 'jumlah')) ?>;
 
-// Eval Chart
-new Chart(document.getElementById('evalChart'), {
-    type: 'bar',
-    data: {
-        labels: ['Silhouette Score', 'Davies-Bouldin Index'],
-        datasets: [
-            {
-                label: 'SOM Standar',
-                data: [<?= $evalSOM['silhouette_score'] ?? 0.151 ?>, <?= $evalSOM['dbi_score'] ?? 2.1715 ?>],
-                backgroundColor: 'rgba(108,117,125,0.8)',
-                borderRadius: 6
-            },
-            {
-                label: 'Hybrid SOM-PSO',
-                data: [<?= $evalHybrid['silhouette_score'] ?? 0.2623 ?>, <?= $evalHybrid['dbi_score'] ?? 1.3998 ?>],
-                backgroundColor: 'rgba(25,135,84,0.85)',
-                borderRadius: 6
-            }
-        ]
-    },
-    options: {
-        responsive: true,
-        plugins: { legend: { position: 'top' } },
-        scales: { y: { beginAtZero: true } }
-    }
-});
+    // Chart Evaluasi
+    new Chart(document.getElementById('evalChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Silhouette Score', 'Davies-Bouldin Index'],
+            datasets: [
+                {
+                    label: 'SOM Standar',
+                    data: [<?= $evalSOM['silhouette_score'] ?? 0.151 ?>, <?= $evalSOM['dbi_score'] ?? 2.1715 ?>],
+                    backgroundColor: 'rgba(108,117,125,0.8)',
+                    borderRadius: 6
+                },
+                {
+                    label: 'Hybrid SOM-PSO',
+                    data: [<?= $evalHybrid['silhouette_score'] ?? 0.2623 ?>, <?= $evalHybrid['dbi_score'] ?? 1.3998 ?>],
+                    backgroundColor: 'rgba(25,135,84,0.85)',
+                    borderRadius: 6
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'top' } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
 
-// Crop distribution
-const colors = labelNames.map((_, i) => `hsl(${(i * 360 / labelNames.length)}, 65%, 55%)`);
-new Chart(document.getElementById('cropChart'), {
+    // Chart Distribusi Tanaman
+    const colors = labelNames.map((_, i) => `hsl(${(i * 360 / labelNames.length)}, 65%, 55%)`);
+        new Chart(document.getElementById('cropChart'), {
     type: 'bar',
     data: {
         labels: labelNames,
@@ -212,10 +213,26 @@ new Chart(document.getElementById('cropChart'), {
     },
     options: {
         responsive: true,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true } }
+        maintainAspectRatio: false, // Wajib false agar mengikuti tinggi CSS
+        plugins: { 
+            legend: { display: false } 
+        },
+        scales: { 
+            x: { 
+                ticks: { 
+                    maxRotation: 60, // Miringkan lebih tajam agar tidak numpuk
+                    minRotation: 60,
+                    font: { size: 11 } 
+                } 
+            },
+            y: { 
+                beginAtZero: true,
+                grid: { drawBorder: false }
+            } 
+        }
     }
 });
+}
 </script>
 
 <?php require_once 'includes/footer.php'; ?>
