@@ -1,0 +1,108 @@
+body {
+  background-color: #f0f2f5;
+  font-family: "Segoe UI", sans-serif;
+}
+
+#sidebar-wrapper {
+  min-height: 100vh;
+  width: 260px;
+  min-width: 260px;
+  transition: all 0.3s;
+}
+
+#wrapper.toggled #sidebar-wrapper {
+  margin-left: -260px;
+}
+
+.sidebar-heading {
+  font-size: 1.1rem;
+}
+
+.list-group-item {
+  border-radius: 0 !important;
+  border-left: 3px solid transparent;
+  padding: 10px 20px;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.list-group-item:hover {
+  border-left-color: #198754;
+  background-color: #1a2332 !important;
+}
+.list-group-item.active {
+  border-left-color: #198754;
+  background-color: #198754 !important;
+}
+
+.sidebar-divider {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #6c757d !important;
+  padding-top: 12px;
+}
+
+.card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+.card-header {
+  border-radius: 12px 12px 0 0 !important;
+  font-weight: 600;
+}
+
+.stat-card {
+  border-radius: 12px;
+  color: white;
+  padding: 20px;
+  transition: transform 0.2s;
+}
+.stat-card:hover {
+  transform: translateY(-3px);
+}
+
+.badge-rendah {
+  background-color: #dc3545;
+}
+.badge-sedang {
+  background-color: #fd7e14;
+}
+.badge-tinggi {
+  background-color: #198754;
+}
+
+.progress-bar-custom {
+  height: 8px;
+  border-radius: 4px;
+}
+
+.table thead th {
+  background-color: #198754;
+  color: white;
+  border: none;
+}
+
+.metric-card {
+  border-left: 4px solid #198754;
+}
+.metric-card.warning {
+  border-left-color: #fd7e14;
+}
+.metric-card.danger {
+  border-left-color: #dc3545;
+}
+
+.algorithm-step {
+  background: white;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-left: 4px solid #198754;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+canvas {
+  max-width: 100%;
+}
